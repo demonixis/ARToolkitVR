@@ -1,16 +1,41 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR;
 
-public class SetupCamera : MonoBehaviour
+public sealed class SetupCamera : MonoBehaviour
 {
     [SerializeField]
-    private RawImage _sceneImage = null;
+    private GameObject m_XRPlayer = null;
     [SerializeField]
-    private RawImage _videoImage = null;
+    private RawImage m_SceneImage = null;
+    [SerializeField]
+    private RawImage m_VideoImage = null;
+
+#if UNITY_EDITOR
+    [Header("Editor")]
+    [SerializeField]
+    [Tooltip("Forces the preview even if VR is not enabled")]
+    private bool m_ForcePreview = false;
+#endif
 
     private IEnumerator Start()
     {
+        var disable = !XRSettings.enabled;
+#if UNITY_EDITOR
+        if (m_ForcePreview)
+            disable = false;
+#endif
+
+        if (disable)
+        {
+            if (m_XRPlayer != null)
+                m_XRPlayer.SetActive(false);
+
+            Destroy(this);
+            yield break;
+        }
+
         for (var i = 0; i < 3; i++)
             yield return new WaitForEndOfFrame();
 
@@ -36,7 +61,7 @@ public class SetupCamera : MonoBehaviour
         videoBackgroundCamera.backgroundColor = Color.black;
         videoBackgroundCamera.rect = arCamera.rect;
 
-        _sceneImage.texture = sceneRT;
-        _videoImage.texture = videoRT;
+        m_SceneImage.texture = sceneRT;
+        m_VideoImage.texture = videoRT;
     }
 }
